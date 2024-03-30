@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.OData;
 using Microsoft.Extensions.Options;
 using Microsoft.OData.UriParser;
+using Microsoft.AspNetCore.Http.Extensions;
+using System;
+using System.Web;
+using Microsoft.AspNetCore.OData.Routing;
 namespace GraduationProject.API.Controllers.Place_Controller
 {
     [Route("api/[controller]")]
@@ -103,16 +107,30 @@ namespace GraduationProject.API.Controllers.Place_Controller
             var places = _placesManager.SearchPlaces().AsQueryable();
             return Ok(places);
         }
-        [HttpGet("category/{categoryName : string}")]
+        [HttpGet("category/{categoryName:string}")]
         [EnableQuery(PageSize = 20)]
-        public ActionResult<IQueryable<CategoryPlacesDto>> GetCategoryPlaces(string categoryName, bool order, string orderby )
+        public ActionResult<IQueryable<CategoryPlacesDto>> GetCategoryPlaces([FromRoute]string categoryName, bool order, string orderby )
         {
-
+            string orderAsString;
             var places = _placesManager.GetCategoryPlaces().AsQueryable();
-            if (orderby is null) 
+            if (!order == false)
             {
-
+                orderAsString = "asc";
             }
+            else
+            {
+                orderAsString = "desc";
+            }
+            if (orderby is null)
+            {
+                orderby = "id";
+            }
+            string baseUrl = "localhost:44300/api/Place/category/";
+            string query = $"?$filter=categoryname eq '{categoryName}'&$orderby={orderby} {orderAsString}";
+            
+            var uri = new Uri(baseUrl + query);
+            ODataRouteOptions options = new ODataRouteOptions();
+            return Ok();
         }
 
 
